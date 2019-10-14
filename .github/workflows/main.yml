@@ -9,6 +9,7 @@ jobs:
       - name: Set up Rust
         uses: hecrj/setup-rust-action@v1
         with:
+          rust-version: nightly
           components: rustfmt
       - uses: actions/checkout@v1
       - run: cargo fmt --all -- --check
@@ -20,6 +21,7 @@ jobs:
         uses: hecrj/setup-rust-action@v1
         with:
           components: clippy
+          rust-version: nightly
       - uses: actions/checkout@v1
       - run: cargo clippy --all-targets --all-features -- -D clippy::all
 
@@ -36,7 +38,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macOS-latest]
-        rust: [stable, beta, nightly]
+        rust: [nightly]
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -56,17 +58,17 @@ jobs:
         os: [ubuntu-latest, macOS-latest, windows-latest]
         include:
           - os: ubuntu-latest
-            rust: stable
+            rust: nightly
             target: x86_64-unknown-linux-musl
             bin: 'prefix'
             name: 'prefix-Linux-x86_64.tar.gz'
           - os: windows-latest
-            rust: stable
+            rust: nightly
             target: x86_64-pc-windows-msvc
             bin: 'prefix.exe'
             name: 'prefix-Windows-x86_64.zip'
           - os: macOS-latest
-            rust: stable
+            rust: nightly
             target: x86_64-apple-darwin
             bin: 'prefix'
             name: 'prefix-Darwin-x86_64.tar.gz'
