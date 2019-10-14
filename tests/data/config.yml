@@ -1,0 +1,17 @@
+pre-commit:
+  - name: a
+    run: |
+      sleep 5
+      echo finished a
+  - name: b
+    run: |
+      sleep 4
+      exit 1
+  - name: c
+    run: |
+      sleep 3
+      echo finished c
+  - name: d
+    run: |
+      sleep 2
+      echo finished d

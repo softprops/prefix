@@ -1,0 +1,16 @@
+[package]
+name = "prixfix"
+version = "0.1.0"
+authors = ["softprops <d.tangren@gmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+colored = "1.8"
+futures-preview = { version = "0.3.0-alpha.19", features = [ "compat"] }
+glob = "0.3"
+serde_yaml = "0.8"
+serde = { version = "1.0", features = ["derive"] }
+tokio = {git = "https://github.com/tokio-rs/tokio.git" }
+structopt = "0.3"
