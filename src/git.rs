@@ -1,4 +1,4 @@
-use std::io;
+use std::{path::Path, io};
 use tokio::process::Command;
 
 pub struct Context {
@@ -32,7 +32,13 @@ async fn exec(cmd: &str) -> io::Result<Vec<String>> {
         .map(|output| {
             String::from_utf8_lossy(&output.stdout)
                 .lines()
-                .map(Into::into)
+                .filter_map(|line| {
+                    if Path::new(line).is_file() {
+                        Some(line.into())
+                    } else {
+                        None
+                    }
+                })
                 .collect()
         })
 }
