@@ -1,8 +1,12 @@
 //#![feature(async_await)]
+mod git;
 use colored::Colorize;
 use futures::future::join_all;
+use git::*;
 use serde::Deserialize;
-use std::{collections::BTreeMap, error::Error, fs::File, io, process::ExitStatus, time::Instant};
+use std::{
+    collections::BTreeMap, env, error::Error, fs::File, io, process::ExitStatus, time::Instant,
+};
 use structopt::StructOpt;
 use tokio::process::Command;
 
@@ -63,31 +67,44 @@ async fn act(
         .map(|result| (action, result, instant.elapsed().as_secs_f64()))
 }
 
+fn applies(
+    _: &Action,
+    _: &Context,
+) -> bool {
+    true
+}
+
 async fn exec(
     hook: &str,
     config: &mut Config,
     instant: Instant,
-) -> Vec<io::Result<(Action, ExitStatus, f64)>> {
-    if std::env::var("PREFIX_SKIP").is_ok() {
-        return Vec::default();
+) -> io::Result<Vec<io::Result<(Action, ExitStatus, f64)>>> {
+    if env::var("PREFIX_SKIP").is_ok() {
+        return Ok(Vec::default());
     }
     let group = config.remove(hook).unwrap_or_default();
     if group.is_empty() {
-        return Vec::default();
+        return Ok(Vec::default());
     }
     println!(
         "{}",
         format!("›Running {} git hooks", hook.to_string().bold()).bright_green()
     );
-
-    join_all(group.into_iter().map(|action| act(action, instant))).await
+    let ctx = git::context().await?;
+    Ok(join_all(
+        group
+            .into_iter()
+            .filter(|action| applies(action, &ctx))
+            .map(|action| act(action, instant)),
+    )
+    .await)
 }
 
 async fn run(args: Run) -> Result<(), Box<dyn Error>> {
     let Run { hook } = args;
     let mut config = parse_config(File::open("tests/data/config.yml")?)?;
     let start = Instant::now();
-    for result in exec(&hook, &mut config, start).await {
+    for result in exec(&hook, &mut config, start).await? {
         match result {
             Ok((action, status, elapsed)) => println!(
                 "complete with action {} {} in {:.2}",
