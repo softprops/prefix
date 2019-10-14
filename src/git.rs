@@ -17,11 +17,11 @@ async fn ls() -> io::Result<Vec<String>> {
 }
 
 async fn staged() -> io::Result<Vec<String>> {
-    exec("git --staged --diff-filter=ACMR --name-only --cached").await
+    exec("git diff --diff-filter=ACMR --name-only --cached").await
 }
 
 async fn push() -> io::Result<Vec<String>> {
-    exec("git diff --name-only HEAD @{push} || git diff --name-only HEAD master").await
+    exec("git diff --diff-filter=ACMR --name-only HEAD @{push} || git diff --diff-filter=ACMR --name-only HEAD master").await
 }
 
 async fn exec(cmd: &str) -> io::Result<Vec<String>> {
