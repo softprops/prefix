@@ -5,7 +5,13 @@ use futures::future::join_all;
 use git::*;
 use serde::Deserialize;
 use std::{
-    collections::BTreeMap, env, error::Error, fs::File, io, process::ExitStatus, time::Instant,
+    collections::BTreeMap,
+    env,
+    error::Error,
+    fs::File,
+    io,
+    process::ExitStatus,
+    time::{Duration, Instant},
 };
 use structopt::StructOpt;
 use tokio::process::Command;
@@ -54,7 +60,7 @@ where
 async fn act(
     action: Action,
     instant: Instant,
-) -> io::Result<(Action, ExitStatus, f64)> {
+) -> io::Result<(Action, ExitStatus, Duration)> {
     println!(
         "{} {}",
         "  › Executing".to_string().bright_green(),
@@ -64,7 +70,7 @@ async fn act(
         .args(&["-c", &action.run])
         .status()
         .await
-        .map(|result| (action, result, instant.elapsed().as_secs_f64()))
+        .map(|result| (action, result, instant.elapsed()))
 }
 
 fn applies(
@@ -78,7 +84,7 @@ async fn exec(
     hook: &str,
     config: &mut Config,
     instant: Instant,
-) -> io::Result<Vec<io::Result<(Action, ExitStatus, f64)>>> {
+) -> io::Result<Vec<io::Result<(Action, ExitStatus, Duration)>>> {
     if env::var("PREFIX_SKIP").is_ok() {
         return Ok(Vec::default());
     }
@@ -111,7 +117,7 @@ async fn run(args: Run) -> Result<(), Box<dyn Error>> {
                 "complete with action {} {} in {:.2}",
                 action.name,
                 status.code().unwrap_or_default(),
-                elapsed
+                elapsed.as_secs_f64()
             ),
             Err(err) => eprintln!("error executing action {}", err),
         }
