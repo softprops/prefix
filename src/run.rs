@@ -13,7 +13,7 @@ use std::{
 use structopt::StructOpt;
 use tokio::process::Command;
 
-const STDIN_HOOKS: &[&str; 4] = &["pre-push", "pre-receive", "post-receive", "post-rewrite"];
+const STDIN_HOOKS: &[&str] = &["pre-push", "pre-receive", "post-receive", "post-rewrite"];
 
 #[derive(StructOpt)]
 pub struct Run {
