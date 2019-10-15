@@ -2,9 +2,9 @@ use std::{io, path::Path};
 use tokio::process::Command;
 
 pub struct Context {
-    ls: Vec<String>,
-    staged: Vec<String>,
-    push: Vec<String>,
+    pub ls: Vec<String>,
+    pub staged: Vec<String>,
+    pub push: Vec<String>,
 }
 
 pub async fn context() -> io::Result<Context> {

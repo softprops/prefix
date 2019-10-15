@@ -1,5 +1,6 @@
 pre-commit:
   - name: a
+    include: '*.rs'
     run: |
       sleep 5
       echo finished a
