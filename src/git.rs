@@ -7,6 +7,13 @@ pub struct Context {
     pub push: Vec<String>,
 }
 
+pub async fn dir() -> io::Result<Option<(String, String)>> {
+    Ok(match &exec("git ls-files --cached").await?[..] {
+        [toplevel, common] => Some((toplevel.to_owned(), common.to_owned())),
+        _ => None,
+    })
+}
+
 pub async fn context() -> io::Result<Context> {
     let (ls, staged, push) = (ls().await?, staged().await?, push().await?);
     Ok(Context { ls, staged, push })
