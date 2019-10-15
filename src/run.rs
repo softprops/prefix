@@ -114,7 +114,6 @@ async fn exec(
 
 pub async fn run(args: Run) -> Result<(), Box<dyn Error>> {
     let Run { hook, args } = args;
-    println!("args {:?}", args);
     let mut config = parse_config(File::open("tests/data/config.yml")?)?;
     let start = Instant::now();
     for result in exec(&hook, &mut config, args, start).await? {
