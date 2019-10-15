@@ -91,12 +91,13 @@ async fn exec(
         format!("›Running {} git hooks", hook.to_string().bold()).bright_green()
     );
     let ctx = git::context().await?;
-    Ok(join_all(
-        group
-            .into_iter()
-            .filter(|action| applies(action, &ctx))
-            .map(|action| act(action, instant)),
-    )
+    Ok(join_all(group.into_iter().filter_map(|action| {
+        if applies(&action, &ctx) {
+            Some(act(action, instant))
+        } else {
+            None
+        }
+    }))
     .await)
 }
 
