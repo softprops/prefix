@@ -30,6 +30,8 @@ jobs:
     steps:
       - name: Set up Rust
         uses: hecrj/setup-rust-action@v1
+        with:
+          rust-version: nightly
       - uses: actions/checkout@v1
       - run: cargo check --all
 
