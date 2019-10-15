@@ -13,12 +13,17 @@ use std::{
 use structopt::StructOpt;
 use tokio::process::Command;
 
+const STDIN_HOOKS: &[&str; 4] = &["pre-push", "pre-receive", "post-receive", "post-rewrite"];
+
 #[derive(StructOpt)]
 pub struct Run {
     /// name of git hook group to run
     ///
     /// see https://git-scm.com/book/en/v2/Customizing-Git-Git-Hooks#_client_side_hooks for a list of hooks
     hook: String,
+    /// any additional git args that may come after --
+    #[structopt(raw(true))]
+    args: Vec<String>,
 }
 
 async fn act(
@@ -72,10 +77,20 @@ fn paths(
 async fn exec(
     hook: &str,
     config: &mut Config,
+    args: Vec<String>,
     instant: Instant,
 ) -> io::Result<Vec<io::Result<(Action, ExitStatus, Duration)>>> {
     if env::var("PREFIX_SKIP").is_ok() {
         return Ok(Vec::default());
+    }
+    if !args.is_empty() {
+        env::set_var("PREFIX_GIT_ARGS", args.join(" "));
+    }
+    if STDIN_HOOKS.contains(&hook) {
+        use io::Read;
+        let mut buf = String::new();
+        io::stdin().lock().read_to_string(&mut buf)?;
+        env::set_var("PREFIX_GIT_STDIN", buf);
     }
     let group = config.remove(hook).unwrap_or_default();
     if group.is_empty() {
@@ -87,21 +102,22 @@ async fn exec(
     );
     let ctx = git::context().await?;
     Ok(join_all(group.into_iter().filter_map(|action| {
-        let ps = paths(&action, &ctx);
-        if ps.is_empty() {
+        let files = paths(&action, &ctx);
+        if files.is_empty() {
             None
         } else {
-            Some(act(action, ps, instant))
+            Some(act(action, files, instant))
         }
     }))
     .await)
 }
 
 pub async fn run(args: Run) -> Result<(), Box<dyn Error>> {
-    let Run { hook } = args;
+    let Run { hook, args } = args;
+    println!("args {:?}", args);
     let mut config = parse_config(File::open("tests/data/config.yml")?)?;
     let start = Instant::now();
-    for result in exec(&hook, &mut config, start).await? {
+    for result in exec(&hook, &mut config, args, start).await? {
         match result {
             Ok((action, status, elapsed)) => println!(
                 "complete with action {} {} in {:.2}",

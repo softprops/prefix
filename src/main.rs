@@ -45,7 +45,7 @@ where
             &self,
             formatter: &mut fmt::Formatter<'_>,
         ) -> fmt::Result {
-            write!(formatter, "a string")
+            write!(formatter, "a pattern")
         }
 
         fn visit_str<E>(
