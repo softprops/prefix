@@ -1,4 +1,3 @@
-//#![feature(async_await)]
 mod git;
 mod install;
 mod run;
