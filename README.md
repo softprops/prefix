@@ -1,5 +1,5 @@
-<div style="font-size:2em" align="center">
-  🧼
+<div align="center">
+  <font size="2em">🧼</font>
 </div>
 <h1 align="center">
   prefix
