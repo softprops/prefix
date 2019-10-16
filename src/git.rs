@@ -11,15 +11,15 @@ pub struct Context {
 #[derive(Debug, PartialEq)]
 pub struct Dir {
     top_level: String,
-    common_dir: String,
+    git_dir: String,
 }
 
 pub async fn dir() -> io::Result<Option<Dir>> {
     Ok(
         match &lines("git rev-parse --show-toplevel --git-common-dir").await?[..] {
-            [top_level, common_dir] => Some(Dir {
+            [top_level, git_dir] => Some(Dir {
                 top_level: top_level.into(),
-                common_dir: common_dir.into(),
+                git_dir: git_dir.into(),
             }),
             _ => None,
         },
@@ -82,7 +82,7 @@ mod tests {
             dir().await?,
             Some(Dir {
                 top_level: Path::new(".").canonicalize()?.display().to_string(),
-                common_dir: ".git".into()
+                git_dir: ".git".into()
             })
         );
         Ok(())
