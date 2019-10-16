@@ -7,11 +7,21 @@ pub struct Context {
     pub push: Vec<String>,
 }
 
-pub async fn dir() -> io::Result<Option<(String, String)>> {
-    Ok(match &exec("git ls-files --cached").await?[..] {
-        [toplevel, common] => Some((toplevel.to_owned(), common.to_owned())),
-        _ => None,
-    })
+pub struct Dir {
+    top_level: String,
+    commmon_dir: String,
+}
+
+pub async fn dir() -> io::Result<Option<Dir>> {
+    Ok(
+        match &exec("git rev-parse --show-toplevel --git-common-dir").await?[..] {
+            [top_level, common_dir] => Some(Dir {
+                top_level: top_level.into(),
+                common_dir: common_dir.into(),
+            }),
+            _ => None,
+        },
+    )
 }
 
 pub async fn context() -> io::Result<Context> {
