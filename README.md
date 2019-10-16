@@ -1,6 +1,6 @@
-<h1 align="center">
+<div style="font-size:2em" align="center">
   🧼
-</h1>
+</div>
 <h1 align="center">
   prefix
 </h1>
