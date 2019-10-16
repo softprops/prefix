@@ -1,5 +1,30 @@
-use std::{io, path::Path};
+use std::{
+    io,
+    path::{Path, PathBuf},
+};
 use tokio::process::Command;
+
+pub const HOOKS: &[&str] = &[
+    "applypatch-msg",
+    "pre-applypatch",
+    "post-applypatch",
+    "pre-commit",
+    "prepare-commit-msg",
+    "commit-msg",
+    "post-commit",
+    "pre-rebase",
+    "post-checkout",
+    "post-merge",
+    "pre-push",
+    "pre-receive",
+    "update",
+    "post-receive",
+    "post-update",
+    "push-to-checkout",
+    "pre-auto-gc",
+    "post-rewrite",
+    "sendemail-validate",
+];
 
 #[derive(Debug, PartialEq)]
 pub struct Context {
@@ -10,8 +35,8 @@ pub struct Context {
 
 #[derive(Debug, PartialEq)]
 pub struct Dir {
-    top_level: String,
-    git_dir: String,
+    pub top_level: PathBuf,
+    pub git_dir: PathBuf,
 }
 
 pub async fn dir() -> io::Result<Option<Dir>> {
@@ -81,7 +106,7 @@ mod tests {
         assert_eq!(
             dir().await?,
             Some(Dir {
-                top_level: Path::new(".").canonicalize()?.display().to_string(),
+                top_level: Path::new(".").canonicalize()?.to_path_buf(),
                 git_dir: ".git".into()
             })
         );

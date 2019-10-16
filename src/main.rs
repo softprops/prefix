@@ -1,6 +1,7 @@
 mod git;
 mod install;
 mod run;
+mod uninstall;
 use glob::Pattern;
 use serde::Deserialize;
 use std::{collections::BTreeMap, error::Error, fmt, io};
@@ -8,14 +9,17 @@ use structopt::StructOpt;
 
 use install::{install, Install};
 use run::{run, Run};
+use uninstall::{uninstall, Uninstall};
 
 #[derive(StructOpt)]
 /// a managed githook runner
 enum Options {
     /// Run hook group
     Run(Run),
-    /// Install hook
+    /// Install git hooks
     Install(Install),
+    /// Uninstall git hooks
+    Uninstall(Uninstall),
 }
 
 #[derive(Deserialize, Debug, Clone)]
@@ -76,6 +80,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     match Options::from_args() {
         Options::Run(args) => run(args).await?,
         Options::Install(args) => install(args).await?,
+        Options::Uninstall(args) => uninstall(args).await?,
     }
     Ok(())
 }
