@@ -2,10 +2,13 @@ use crate::{
     git,
     git::{dir, Dir},
 };
+use colored::Colorize;
 use std::{
     error::Error,
-    fs::{create_dir_all, OpenOptions},
+    fs::{create_dir_all, OpenOptions, Permissions},
     io,
+    io::Write,
+    os::unix::fs::PermissionsExt,
     path::PathBuf,
 };
 use structopt::StructOpt;
@@ -17,8 +20,10 @@ fn add_hook(
     hook: PathBuf,
     script: &str,
 ) -> io::Result<()> {
-    println!("creating hook {}", hook.display());
-    use std::{fs::Permissions, io::Write, os::unix::fs::PermissionsExt};
+    println!(
+        "creating hook {}",
+        hook.display().to_string().bright_green()
+    );
     let mut file = OpenOptions::new().create(true).write(true).open(hook)?;
     let permissions = Permissions::from_mode(0o744);
     file.set_permissions(permissions)?;

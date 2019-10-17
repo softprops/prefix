@@ -25,7 +25,8 @@ enum Options {
 #[derive(Deserialize, Debug, Clone)]
 pub struct Action {
     /// name for display
-    name: String,
+    #[serde(default)]
+    name: Option<String>,
     /// pattern of files include
     #[serde(deserialize_with = "deserialize_from_str", default)]
     include: Option<Pattern>,
@@ -66,7 +67,7 @@ where
     deserializer.deserialize_str(Visitor)
 }
 
-type Config = BTreeMap<String, Vec<Action>>;
+type Config = BTreeMap<String, BTreeMap<String, Action>>;
 
 pub fn parse_config<R>(reader: R) -> Result<Config, Box<dyn Error>>
 where

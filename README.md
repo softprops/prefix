@@ -6,7 +6,7 @@
 </h1>
 
 <p align="center">
-  prewash for git repositories
+  prewash for git repository commits
 </p>
 <div align="center">
   <a href="https://github.com/softprops/prefix/actions">
@@ -19,6 +19,5 @@
 </div>
 
 <br />
-
 
 Doug Tangren (softprops) 2019
