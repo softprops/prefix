@@ -4,6 +4,10 @@ use std::{
 };
 use tokio::process::Command;
 
+/// hooks that can be by-passed
+pub const NOVERIFY_HOOKS: &[&str] = &["commit-msg", "pre-commit", "pre-rebase", "pre-push"];
+
+/// client-side hooks
 pub const HOOKS: &[&str] = &[
     "applypatch-msg",
     "pre-applypatch",
@@ -106,7 +110,7 @@ mod tests {
         assert_eq!(
             dir().await?,
             Some(Dir {
-                top_level: Path::new(".").canonicalize()?.to_path_buf(),
+                top_level: Path::new(".").canonicalize()?,
                 git_dir: ".git".into()
             })
         );
