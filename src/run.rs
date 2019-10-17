@@ -5,6 +5,7 @@ use futures::future::join_all;
 use std::{
     env,
     error::Error,
+    fmt,
     fs::File,
     io,
     process::Output,
@@ -14,6 +15,46 @@ use structopt::StructOpt;
 use tokio::process::Command;
 
 const STDIN_HOOKS: &[&str] = &["pre-push", "pre-receive", "post-receive", "post-rewrite"];
+
+// todo: send pull to https://github.com/mitsuhiko/indicatif to add millis
+struct HumanDuration(Duration);
+
+impl fmt::Display for HumanDuration {
+    fn fmt(
+        &self,
+        f: &mut fmt::Formatter<'_>,
+    ) -> fmt::Result {
+        let t = self.0.as_millis();
+        let alt = f.alternate();
+        macro_rules! try_unit {
+            ($secs:expr, $sg:expr, $pl:expr, $s:expr) => {
+                let cnt = t / $secs;
+                if cnt == 1 {
+                    if alt {
+                        return write!(f, "{}{}", cnt, $s);
+                    } else {
+                        return write!(f, "{} {}", cnt, $sg);
+                    }
+                } else if cnt > 1 {
+                    if alt {
+                        return write!(f, "{}{}", cnt, $s);
+                    } else {
+                        return write!(f, "{} {}", cnt, $pl);
+                    }
+                }
+            };
+        }
+
+        try_unit!(365 * 24 * 60 * 60 * 1000, "year", "years", "y");
+        try_unit!(7 * 24 * 60 * 60 * 1000, "week", "weeks", "w");
+        try_unit!(24 * 60 * 60 * 1000, "day", "days", "d");
+        try_unit!(60 * 60 * 1000, "hour", "hours", "h");
+        try_unit!(60 * 1000, "minute", "minutes", "m");
+        try_unit!(1000, "second", "seconds", "s");
+        try_unit!(1, "milli", "millis", "ms");
+        write!(f, "0{}", if alt { "s" } else { " seconds" })
+    }
+}
 
 #[derive(StructOpt)]
 pub struct Run {
@@ -125,21 +166,33 @@ pub async fn run(args: Run) -> Result<(), Box<dyn Error>> {
     let start = Instant::now();
     for result in exec(&hook, &mut config, args, start).await? {
         match result {
-            Ok((id, action, output, elapsed)) => println!(
-                "complete with action {} {} in {:.2}",
-                action.name.unwrap_or(id),
-                output.status.code().unwrap_or_default(),
-                elapsed.as_secs_f64()
-            ),
+            Ok((id, action, output, elapsed)) => {
+                let code = output.status.code().unwrap_or_default();
+                println!(
+                    "{} {} action {} {}",
+                    if code == 0 {
+                        "✔".green()
+                    } else {
+                        "✘".red()
+                    },
+                    if code == 0 {
+                        "passed".green()
+                    } else {
+                        "failed".red()
+                    },
+                    action.name.unwrap_or(id),
+                    format!("({})", HumanDuration(elapsed)).dimmed()
+                )
+            }
             Err(err) => eprintln!("error executing action {}", err),
         }
     }
     println!(
         "{}",
         format!(
-            "›{} hooks complete in {:.2} seconds",
+            "›{} hooks complete {}",
             hook,
-            start.elapsed().as_secs_f64()
+            format!("({})", HumanDuration(start.elapsed())).dimmed()
         )
         .bright_green()
     );

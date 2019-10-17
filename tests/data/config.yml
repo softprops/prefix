@@ -7,14 +7,14 @@ pre-commit:
   b:
     include: '*.rs'
     run: |
-      sleep 1
+      sleep .1
       echo {files}
       exit 1
   c:
     run: |
-      sleep 1
+      sleep .1
       echo finished c
   d:
     run: |
-      sleep 1
+      sleep .1
       echo finished d
