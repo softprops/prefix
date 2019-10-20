@@ -74,6 +74,18 @@ pub enum HookDefinition {
     String(String),
 }
 
+impl Into<Action> for HookDefinition {
+    fn into(self) -> Action {
+        match self {
+            HookDefinition::Action(action) => action,
+            HookDefinition::String(run) => Action {
+                run,
+                ..Action::default()
+            },
+        }
+    }
+}
+
 type Config = BTreeMap<String, BTreeMap<String, HookDefinition>>;
 
 pub fn parse_config<R>(reader: R) -> Result<Config, Box<dyn Error>>

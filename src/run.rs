@@ -1,4 +1,4 @@
-use super::{parse_config, Action, Config, HookDefinition};
+use super::{parse_config, Action, Config};
 use crate::{git, git::*};
 use colored::Colorize;
 use futures::future::join_all;
@@ -150,13 +150,7 @@ async fn exec(
     );
     let ctx = git::context().await?;
     Ok(join_all(actions.into_iter().filter_map(|(id, def)| {
-        let action = match def {
-            HookDefinition::Action(action) => action,
-            HookDefinition::String(run) => Action {
-                run,
-                ..Action::default()
-            },
-        };
+        let action: Action = def.into();
         let files = paths(&action, &ctx);
         if files.is_empty() {
             None
@@ -174,18 +168,14 @@ pub async fn run(args: Run) -> Result<(), Box<dyn Error>> {
     for result in exec(&hook, &mut config, args, start).await? {
         match result {
             Ok((id, action, output, elapsed)) => {
-                let code = output.status.code().unwrap_or_default();
+                let failed = output.status.code().iter().any(|code| *code != 0);
                 println!(
                     "{} {} action {} {}",
-                    if code == 0 {
-                        "✔".green()
-                    } else {
-                        "✘".red()
-                    },
-                    if code == 0 {
-                        "passed".green()
-                    } else {
+                    if failed { "✘".red() } else { "✔".green() },
+                    if failed {
                         "failed".red()
+                    } else {
+                        "passed".green()
                     },
                     action.name.unwrap_or(id),
                     format!("({})", HumanDuration(elapsed)).dimmed()
