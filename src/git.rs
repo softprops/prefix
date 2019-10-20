@@ -1,3 +1,4 @@
+use path_slash::PathBufExt;
 use std::{
     io,
     path::{Path, PathBuf},
@@ -47,8 +48,8 @@ pub async fn dir() -> io::Result<Option<Dir>> {
     Ok(
         match &lines("git rev-parse --show-toplevel --git-common-dir").await?[..] {
             [top_level, git_dir] => Some(Dir {
-                top_level: top_level.into(),
-                git_dir: git_dir.into(),
+                top_level: PathBuf::from_slash(top_level),
+                git_dir: PathBuf::from_slash(git_dir),
             }),
             _ => None,
         },
