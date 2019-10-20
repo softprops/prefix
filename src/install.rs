@@ -8,7 +8,6 @@ use std::{
     fs::{create_dir_all, OpenOptions, Permissions},
     io,
     io::Write,
-    os::unix::fs::PermissionsExt,
     path::PathBuf,
 };
 use structopt::StructOpt;
@@ -27,6 +26,7 @@ fn add_hook(
     let mut file = OpenOptions::new().create(true).write(true).open(hook)?;
     #[cfg(target_family = "unix")]
     {
+        use os::unix::fs::PermissionsExt;
         let permissions = Permissions::from_mode(0o744);
         file.set_permissions(permissions)?;
     }
