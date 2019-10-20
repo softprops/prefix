@@ -22,7 +22,7 @@ enum Options {
     Uninstall(Uninstall),
 }
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Default, Deserialize, Debug, Clone)]
 pub struct Action {
     /// name for display
     #[serde(default)]
@@ -67,7 +67,14 @@ where
     deserializer.deserialize_str(Visitor)
 }
 
-type Config = BTreeMap<String, BTreeMap<String, Action>>;
+#[derive(Deserialize, Debug)]
+#[serde(untagged)]
+pub enum HookDefinition {
+    Action(Action),
+    String(String),
+}
+
+type Config = BTreeMap<String, BTreeMap<String, HookDefinition>>;
 
 pub fn parse_config<R>(reader: R) -> Result<Config, Box<dyn Error>>
 where

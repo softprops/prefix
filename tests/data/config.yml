@@ -14,7 +14,4 @@ pre-commit:
     run: |
       sleep .1
       echo finished c
-  d:
-    run: |
-      sleep .1
-      echo finished d
+  d: echo finished d

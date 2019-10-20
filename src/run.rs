@@ -1,4 +1,4 @@
-use super::{parse_config, Action, Config};
+use super::{parse_config, Action, Config, HookDefinition};
 use crate::{git, git::*};
 use colored::Colorize;
 use futures::future::join_all;
@@ -149,7 +149,14 @@ async fn exec(
         format!("›Running {}", hook.to_string().bold()).bright_green()
     );
     let ctx = git::context().await?;
-    Ok(join_all(actions.into_iter().filter_map(|(id, action)| {
+    Ok(join_all(actions.into_iter().filter_map(|(id, def)| {
+        let action = match def {
+            HookDefinition::Action(action) => action,
+            HookDefinition::String(run) => Action {
+                run,
+                ..Action::default()
+            },
+        };
         let files = paths(&action, &ctx);
         if files.is_empty() {
             None
