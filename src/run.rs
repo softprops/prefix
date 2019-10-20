@@ -8,6 +8,7 @@ use std::{
     fmt,
     fs::File,
     io,
+    path::PathBuf,
     process::Output,
     time::{Duration, Instant},
 };
@@ -62,6 +63,8 @@ pub struct Run {
     ///
     /// see https://git-scm.com/book/en/v2/Customizing-Git-Git-Hooks#_client_side_hooks for a list of hooks
     hook: String,
+    #[structopt(short)]
+    config: Option<PathBuf>,
     /// any additional git args that may come after --
     #[structopt(raw(true))]
     args: Vec<String>,
@@ -181,7 +184,7 @@ async fn exec(
 }
 
 pub async fn run(args: Run) -> Result<(), Box<dyn Error>> {
-    let Run { hook, args } = args;
+    let Run { hook, args, .. } = args;
     let mut config = parse_config(File::open("tests/data/config.yml")?)?;
     let start = Instant::now();
     let results = exec(&hook, &mut config, args, start).await?;
