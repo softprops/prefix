@@ -110,8 +110,12 @@ mod tests {
     async fn dir_provides_paths() -> Result<(), Box<dyn Error>> {
         assert_eq!(
             dir().await?,
+            // canonicalize returns a "UNC" path on windows
+            // https://github.com/rust-lang/rust/issues/42869
             Some(Dir {
-                top_level: Path::new(".").canonicalize()?,
+                top_level: Path::new(".")
+                    .canonicalize()
+                    .map(|path| { path.to_string_lossy().replace(r"\\?\", "").into() })?,
                 git_dir: ".git".into()
             })
         );
