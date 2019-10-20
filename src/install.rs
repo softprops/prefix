@@ -25,8 +25,11 @@ fn add_hook(
         hook.display().to_string().bright_green()
     );
     let mut file = OpenOptions::new().create(true).write(true).open(hook)?;
-    let permissions = Permissions::from_mode(0o744);
-    file.set_permissions(permissions)?;
+    #[cfg(target_family = "unix")]
+    {
+        let permissions = Permissions::from_mode(0o744);
+        file.set_permissions(permissions)?;
+    }
     file.write_all(script.as_bytes())?;
     Ok(())
 }
