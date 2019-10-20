@@ -67,12 +67,26 @@ pub struct Run {
     args: Vec<String>,
 }
 
+#[derive(Debug)]
+struct ActionResult {
+    id: String,
+    action: Action,
+    output: Output,
+    elapsed: Duration,
+}
+
+impl ActionResult {
+    fn failed(&self) -> bool {
+        self.output.status.code().iter().any(|code| *code != 0)
+    }
+}
+
 async fn act(
     id: String,
     action: Action,
     paths: Vec<String>,
     instant: Instant,
-) -> io::Result<(String, Action, Output, Duration)> {
+) -> io::Result<ActionResult> {
     println!(
         "{} {}",
         "  › Executing".to_string().bright_green(),
@@ -88,7 +102,12 @@ async fn act(
         .args(&["-c", &command])
         .output()
         .await
-        .map(|result| (id, action, result, instant.elapsed()))
+        .map(|output| ActionResult {
+            id,
+            action,
+            output,
+            elapsed: instant.elapsed(),
+        })
 }
 
 fn paths(
@@ -127,7 +146,7 @@ async fn exec(
     config: &mut Config,
     args: Vec<String>,
     instant: Instant,
-) -> io::Result<Vec<io::Result<(String, Action, Output, Duration)>>> {
+) -> io::Result<Vec<io::Result<ActionResult>>> {
     if env::var("PREFIX_SKIP").is_ok() {
         return Ok(Vec::default());
     }
@@ -165,10 +184,21 @@ pub async fn run(args: Run) -> Result<(), Box<dyn Error>> {
     let Run { hook, args } = args;
     let mut config = parse_config(File::open("tests/data/config.yml")?)?;
     let start = Instant::now();
-    for result in exec(&hook, &mut config, args, start).await? {
+    let results = exec(&hook, &mut config, args, start).await?;
+    let has_errors = results.iter().any(|result| match result {
+        Err(_) => true,
+        Ok(res) => res.failed(),
+    });
+    for result in results {
         match result {
-            Ok((id, action, output, elapsed)) => {
-                let failed = output.status.code().iter().any(|code| *code != 0);
+            Ok(res) => {
+                let failed = res.failed();
+                let ActionResult {
+                    id,
+                    action,
+                    elapsed,
+                    ..
+                } = res;
                 println!(
                     "{} {} action {} {}",
                     if failed { "✘".red() } else { "✔".green() },
@@ -193,5 +223,8 @@ pub async fn run(args: Run) -> Result<(), Box<dyn Error>> {
         )
         .bright_green()
     );
+    if has_errors && git::NOVERIFY_HOOKS.contains(&hook.as_str()) {
+        println!("add --no-verify to bypass")
+    }
     Ok(())
 }
