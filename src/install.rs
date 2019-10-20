@@ -26,7 +26,7 @@ fn add_hook(
     let mut file = OpenOptions::new().create(true).write(true).open(hook)?;
     #[cfg(target_family = "unix")]
     {
-        use os::unix::fs::PermissionsExt;
+        use std::os::unix::fs::PermissionsExt;
         let permissions = Permissions::from_mode(0o744);
         file.set_permissions(permissions)?;
     }
