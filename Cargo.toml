@@ -15,3 +15,4 @@ serde = { version = "1.0", features = ["derive"] }
 tokio = { version = "0.2.0-alpha.6", features = ["process"] }
 structopt = "0.3"
 path-slash = "0.1"
+linked-hash-map = { version = "0.5", features = ["serde_impl"] }

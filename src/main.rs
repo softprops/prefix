@@ -7,8 +7,9 @@ mod install;
 mod run;
 mod uninstall;
 use glob::Pattern;
+use linked_hash_map::LinkedHashMap;
 use serde::Deserialize;
-use std::{collections::BTreeMap, error::Error, fmt, io};
+use std::{error::Error, fmt, io};
 use structopt::StructOpt;
 
 use install::{install, Install};
@@ -94,7 +95,7 @@ impl Into<Action> for HookDefinition {
     }
 }
 
-type Config = BTreeMap<String, BTreeMap<String, HookDefinition>>;
+type Config = LinkedHashMap<String, LinkedHashMap<String, HookDefinition>>;
 
 /// Attempt to parse a yaml configuration file
 pub fn parse_config<R>(reader: R) -> Result<Config, Box<dyn Error>>
