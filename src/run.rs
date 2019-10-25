@@ -63,7 +63,7 @@ pub struct Run {
     ///
     /// see https://git-scm.com/book/en/v2/Customizing-Git-Git-Hooks#_client_side_hooks for a list of hooks
     hook: String,
-    #[structopt(short,long)]
+    #[structopt(short, long)]
     config: Option<PathBuf>,
     /// any additional git args that may come after --
     #[structopt(raw(true))]
@@ -168,7 +168,7 @@ async fn exec(
     }
     println!(
         "{}",
-        format!("›Running {}", hook.to_string().bold()).bright_green()
+        format!("› Running {}", hook.to_string().bold()).bright_green()
     );
     let git_files = git::context().await?;
     Ok(join_all(actions.into_iter().filter_map(|(id, def)| {
@@ -187,7 +187,7 @@ pub async fn run(args: Run) -> Result<(), Box<dyn Error>> {
     let Run { hook, config, args } = args;
     if let Some(Dir { top_level, .. }) = git::dir().await? {
         let mut config = parse_config(File::open(
-            config.unwrap_or_else(|| top_level.join(".prefix.yml")),
+            config.unwrap_or_else(|| top_level.join("prefix.yml")),
         )?)?;
         let start = Instant::now();
         let results = exec(&hook, &mut config, args, start).await?;
@@ -202,11 +202,11 @@ pub async fn run(args: Run) -> Result<(), Box<dyn Error>> {
                     let ActionResult {
                         id,
                         action,
+                        output,
                         elapsed,
-                        ..
                     } = res;
                     println!(
-                        "{} {} action {} {}",
+                        "{} {} {} {}",
                         if failed { "✘".red() } else { "✔".green() },
                         if failed {
                             "failed".red()
@@ -215,7 +215,15 @@ pub async fn run(args: Run) -> Result<(), Box<dyn Error>> {
                         },
                         action.name.unwrap_or(id),
                         format!("({})", HumanDuration(elapsed)).dimmed()
-                    )
+                    );
+                    let stdout = String::from_utf8_lossy(&output.stdout);
+                    let stderr = String::from_utf8_lossy(&output.stderr);
+                    if failed && !stderr.is_empty() {
+                        println!("{}", stderr);
+                    }
+                    if !stdout.is_empty() {
+                        println!("{}", stdout);
+                    }
                 }
                 Err(err) => eprintln!("error executing action {}", err),
             }
@@ -223,7 +231,7 @@ pub async fn run(args: Run) -> Result<(), Box<dyn Error>> {
         println!(
             "{}",
             format!(
-                "›{} hooks complete {}",
+                "› {} complete {}",
                 hook,
                 format!("({})", HumanDuration(start.elapsed())).dimmed()
             )

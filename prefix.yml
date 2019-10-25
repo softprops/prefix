@@ -1,0 +1,3 @@
+pre-commit:
+  test: cargo test
+  style: cargo fmt -- --check
