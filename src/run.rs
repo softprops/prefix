@@ -185,51 +185,54 @@ async fn exec(
 
 pub async fn run(args: Run) -> Result<(), Box<dyn Error>> {
     let Run { hook, config, args } = args;
-    let mut config = parse_config(File::open(
-        config.unwrap_or_else(|| "tests/data/config.yml".into()),
-    )?)?;
-    let start = Instant::now();
-    let results = exec(&hook, &mut config, args, start).await?;
-    let has_errors = results.iter().any(|result| match result {
-        Err(_) => true,
-        Ok(res) => res.failed(),
-    });
-    for result in results {
-        match result {
-            Ok(res) => {
-                let failed = res.failed();
-                let ActionResult {
-                    id,
-                    action,
-                    elapsed,
-                    ..
-                } = res;
-                println!(
-                    "{} {} action {} {}",
-                    if failed { "✘".red() } else { "✔".green() },
-                    if failed {
-                        "failed".red()
-                    } else {
-                        "passed".green()
-                    },
-                    action.name.unwrap_or(id),
-                    format!("({})", HumanDuration(elapsed)).dimmed()
-                )
+    if let Some(Dir { top_level, .. }) = git::dir().await? {
+        let mut config = parse_config(File::open(
+            config.unwrap_or_else(|| top_level.join(".prefix.yml")),
+        )?)?;
+        let start = Instant::now();
+        let results = exec(&hook, &mut config, args, start).await?;
+        let has_errors = results.iter().any(|result| match result {
+            Err(_) => true,
+            Ok(res) => res.failed(),
+        });
+        for result in results {
+            match result {
+                Ok(res) => {
+                    let failed = res.failed();
+                    let ActionResult {
+                        id,
+                        action,
+                        elapsed,
+                        ..
+                    } = res;
+                    println!(
+                        "{} {} action {} {}",
+                        if failed { "✘".red() } else { "✔".green() },
+                        if failed {
+                            "failed".red()
+                        } else {
+                            "passed".green()
+                        },
+                        action.name.unwrap_or(id),
+                        format!("({})", HumanDuration(elapsed)).dimmed()
+                    )
+                }
+                Err(err) => eprintln!("error executing action {}", err),
             }
-            Err(err) => eprintln!("error executing action {}", err),
+        }
+        println!(
+            "{}",
+            format!(
+                "›{} hooks complete {}",
+                hook,
+                format!("({})", HumanDuration(start.elapsed())).dimmed()
+            )
+            .bright_green()
+        );
+        if has_errors && git::NOVERIFY_HOOKS.contains(&hook.as_str()) {
+            println!("add --no-verify to bypass")
         }
     }
-    println!(
-        "{}",
-        format!(
-            "›{} hooks complete {}",
-            hook,
-            format!("({})", HumanDuration(start.elapsed())).dimmed()
-        )
-        .bright_green()
-    );
-    if has_errors && git::NOVERIFY_HOOKS.contains(&hook.as_str()) {
-        println!("add --no-verify to bypass")
-    }
+
     Ok(())
 }
