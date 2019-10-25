@@ -3,7 +3,7 @@ use std::{
     io,
     path::{Path, PathBuf},
 };
-use tokio::process::Command;
+use tokio::net::process::Command;
 
 /// hooks that can be by-passed
 pub const NOVERIFY_HOOKS: &[&str] = &["commit-msg", "pre-commit", "pre-rebase", "pre-push"];
@@ -32,7 +32,7 @@ pub const HOOKS: &[&str] = &[
 ];
 
 #[derive(Debug, PartialEq)]
-pub struct Context {
+pub struct Files {
     pub ls: Vec<String>,
     pub staged: Vec<String>,
     pub push: Vec<String>,
@@ -56,9 +56,9 @@ pub async fn dir() -> io::Result<Option<Dir>> {
     )
 }
 
-pub async fn context() -> io::Result<Context> {
+pub async fn context() -> io::Result<Files> {
     let (ls, staged, push) = (ls().await?, staged().await?, push().await?);
-    Ok(Context { ls, staged, push })
+    Ok(Files { ls, staged, push })
 }
 
 async fn ls() -> io::Result<Vec<String>> {

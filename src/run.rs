@@ -13,7 +13,7 @@ use std::{
     time::{Duration, Instant},
 };
 use structopt::StructOpt;
-use tokio::process::Command;
+use tokio::net::process::Command;
 
 const STDIN_HOOKS: &[&str] = &["pre-push", "pre-receive", "post-receive", "post-rewrite"];
 
@@ -115,7 +115,7 @@ async fn act(
 
 fn paths(
     action: &Action,
-    context: &Context,
+    files: &Files,
 ) -> Vec<String> {
     let Action {
         include,
@@ -124,11 +124,11 @@ fn paths(
         ..
     } = action;
     let files = if run.contains("{staged_files}") {
-        &context.staged
+        &files.staged
     } else if run.contains("{push_files}") {
-        &context.push
+        &files.push
     } else {
-        &context.ls
+        &files.ls
     };
     files
         .iter()
@@ -170,10 +170,10 @@ async fn exec(
         "{}",
         format!("›Running {}", hook.to_string().bold()).bright_green()
     );
-    let ctx = git::context().await?;
+    let git_files = git::context().await?;
     Ok(join_all(actions.into_iter().filter_map(|(id, def)| {
         let action: Action = def.into();
-        let files = paths(&action, &ctx);
+        let files = paths(&action, &git_files);
         if files.is_empty() {
             None
         } else {
@@ -184,8 +184,10 @@ async fn exec(
 }
 
 pub async fn run(args: Run) -> Result<(), Box<dyn Error>> {
-    let Run { hook, args, .. } = args;
-    let mut config = parse_config(File::open("tests/data/config.yml")?)?;
+    let Run { hook, config, args } = args;
+    let mut config = parse_config(File::open(
+        config.unwrap_or_else(|| "tests/data/config.yml".into()),
+    )?)?;
     let start = Instant::now();
     let results = exec(&hook, &mut config, args, start).await?;
     let has_errors = results.iter().any(|result| match result {

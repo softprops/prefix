@@ -1,3 +1,7 @@
+//! Automatic maintainability
+#![cfg_attr(not(feature = "unstable"), deny(warnings))]
+#![deny(missing_docs)]
+
 mod git;
 mod install;
 mod run;
@@ -22,6 +26,7 @@ enum Options {
     Uninstall(Uninstall),
 }
 
+/// Description of an action to perform on a target st of files
 #[derive(Default, Deserialize, Debug, Clone)]
 pub struct Action {
     /// name for display
