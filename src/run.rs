@@ -63,7 +63,7 @@ pub struct Run {
     ///
     /// see https://git-scm.com/book/en/v2/Customizing-Git-Git-Hooks#_client_side_hooks for a list of hooks
     hook: String,
-    #[structopt(short)]
+    #[structopt(short,long)]
     config: Option<PathBuf>,
     /// any additional git args that may come after --
     #[structopt(raw(true))]

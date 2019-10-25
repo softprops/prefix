@@ -72,10 +72,13 @@ where
     deserializer.deserialize_str(Visitor)
 }
 
+/// Resentations of actions
 #[derive(Deserialize, Debug)]
 #[serde(untagged)]
 pub enum HookDefinition {
+    /// A full configuration
     Action(Action),
+    /// A simple string for an action
     String(String),
 }
 
@@ -93,6 +96,7 @@ impl Into<Action> for HookDefinition {
 
 type Config = BTreeMap<String, BTreeMap<String, HookDefinition>>;
 
+/// Attempt to parse a yaml configuration file
 pub fn parse_config<R>(reader: R) -> Result<Config, Box<dyn Error>>
 where
     R: io::Read,
