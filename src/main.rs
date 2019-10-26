@@ -95,6 +95,7 @@ impl Into<Action> for HookDefinition {
     }
 }
 
+/// Ordered mappings of hook name to named action and their definitions
 type Config = LinkedHashMap<String, LinkedHashMap<String, HookDefinition>>;
 
 /// Attempt to parse a yaml configuration file
