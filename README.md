@@ -4,9 +4,8 @@
 <h1 align="center">
   prefix
 </h1>
-
 <p align="center">
-  prewash for git repository commits
+  fast feedback and clean commits
 </p>
 <div align="center">
   <a href="https://github.com/softprops/prefix/actions">
