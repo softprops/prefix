@@ -5,10 +5,9 @@ use crate::{
 use colored::Colorize;
 use std::{
     error::Error,
-    fs::{create_dir_all, OpenOptions, Permissions},
-    io,
-    io::Write,
-    path::PathBuf,
+    fs::{create_dir_all, File},
+    io::{self, Write},
+    path::{Path, PathBuf},
 };
 use structopt::StructOpt;
 
@@ -23,15 +22,28 @@ fn add_hook(
         "creating hook {}",
         hook.display().to_string().bright_green()
     );
-    let mut file = OpenOptions::new().create(true).write(true).open(hook)?;
+    create_file(hook)?.write_all(script.as_bytes())?;
+    Ok(())
+}
+
+fn create_file<P>(hook: P) -> io::Result<File>
+where
+    P: AsRef<Path>,
+{
     #[cfg(target_family = "unix")]
     {
-        use std::os::unix::fs::PermissionsExt;
-        let permissions = Permissions::from_mode(0o744);
-        file.set_permissions(permissions)?;
+        use std::{fs::OpenOptions, os::unix::fs::OpenOptionsExt};
+        OpenOptions::new()
+            .create(true)
+            .write(true)
+            .truncate(true)
+            .mode(0o755)
+            .open(hook)
     }
-    file.write_all(script.as_bytes())?;
-    Ok(())
+    #[cfg(not(target_family = "unix"))]
+    {
+        File::create(hook)
+    }
 }
 
 pub async fn install(_: Install) -> Result<(), Box<dyn Error>> {
