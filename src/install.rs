@@ -5,19 +5,28 @@ use crate::{
 use colored::Colorize;
 use std::{
     error::Error,
-    fs::{create_dir_all, File},
+    fs::{copy, create_dir_all, File},
     io::{self, Write},
     path::{Path, PathBuf},
 };
 use structopt::StructOpt;
 
 #[derive(StructOpt)]
-pub struct Install {}
+pub struct Install {
+    #[structopt(short, long)]
+    /// When encounting a hook script of the same name, force override it
+    force: bool,
+}
 
 fn add_hook(
     hook: PathBuf,
     script: &str,
+    force: bool,
 ) -> io::Result<()> {
+    if !force && hook.exists() {
+        println!("warning: a hook script with the name {} already exists. Saving it with a .bak extension. To override these files, pass the --force flag", hook.display());
+        copy(&hook, hook.with_extension(".bak"))?;
+    }
     println!(
         "creating hook {}",
         hook.display().to_string().bright_green()
@@ -46,7 +55,8 @@ where
     }
 }
 
-pub async fn install(_: Install) -> Result<(), Box<dyn Error>> {
+pub async fn install(args: Install) -> Result<(), Box<dyn Error>> {
+    let Install { force } = args;
     if let Some(Dir { git_dir, .. }) = dir().await? {
         let hooks_dir = git_dir.join("hooks");
         if !hooks_dir.exists() {
@@ -54,7 +64,7 @@ pub async fn install(_: Install) -> Result<(), Box<dyn Error>> {
         }
         let data = script();
         for hook in git::HOOKS.iter().map(|hook| hooks_dir.join(hook)) {
-            add_hook(hook, &data)?;
+            add_hook(hook, &data, force)?;
         }
     }
     Ok(())

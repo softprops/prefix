@@ -3,6 +3,7 @@
 #![deny(missing_docs)]
 
 mod git;
+mod init;
 mod install;
 mod run;
 mod uninstall;
@@ -12,6 +13,7 @@ use serde::Deserialize;
 use std::{error::Error, fmt, io};
 use structopt::StructOpt;
 
+use init::{init, Init};
 use install::{install, Install};
 use run::{run, Run};
 use uninstall::{uninstall, Uninstall};
@@ -19,6 +21,8 @@ use uninstall::{uninstall, Uninstall};
 #[derive(StructOpt)]
 /// a managed githook runner
 enum Options {
+    /// Intializes git repo with sample config
+    Init(Init),
     /// Run hook group
     Run(Run),
     /// Install git hooks
@@ -109,6 +113,7 @@ where
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
     match Options::from_args() {
+        Options::Init(args) => init(args).await?,
         Options::Run(args) => run(args).await?,
         Options::Install(args) => install(args).await?,
         Options::Uninstall(args) => uninstall(args).await?,
