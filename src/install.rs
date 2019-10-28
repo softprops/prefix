@@ -75,7 +75,7 @@ fn script() -> String {
 #!/bin/sh
 hook_name=$(basename "$0")
 git_args="$*"
-cargo +nightly run -- run $hook_name -- $git_args
+cargo +nightly run -q -- run $hook_name -- $git_args
 "#
     .into()
 }
