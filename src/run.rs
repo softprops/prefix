@@ -228,15 +228,18 @@ pub async fn run(args: Run) -> Result<(), Box<dyn Error>> {
                 Err(err) => eprintln!("error executing action {}", err),
             }
         }
-        println!(
-            "{}",
-            format!(
-                "› {} complete {}",
-                hook,
-                format!("({})", HumanDuration(start.elapsed())).dimmed()
-            )
-            .bright_green()
-        );
+        if !results.is_empty() {
+            println!(
+                "{}",
+                format!(
+                    "› {} complete {}",
+                    hook,
+                    format!("({})", HumanDuration(start.elapsed())).dimmed()
+                )
+                .bright_green()
+            );
+        }
+
         if has_errors && git::NOVERIFY_HOOKS.contains(&hook.as_str()) {
             println!("add --no-verify to bypass")
         }
