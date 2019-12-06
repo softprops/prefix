@@ -3,7 +3,7 @@ use std::{
     io,
     path::{Path, PathBuf},
 };
-use tokio::net::process::Command;
+use tokio::process::Command;
 
 /// hooks that can be by-passed
 pub const NOVERIFY_HOOKS: &[&str] = &["commit-msg", "pre-commit", "pre-rebase", "pre-push"];

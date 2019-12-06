@@ -13,7 +13,7 @@ use std::{
     time::{Duration, Instant},
 };
 use structopt::StructOpt;
-use tokio::net::process::Command;
+use tokio::process::Command;
 
 const STDIN_HOOKS: &[&str] = &["pre-push", "pre-receive", "post-receive", "post-rewrite"];
 
@@ -195,6 +195,7 @@ pub async fn run(args: Run) -> Result<(), Box<dyn Error>> {
             Err(_) => true,
             Ok(res) => res.failed(),
         });
+        let has_results = !results.is_empty();
         for result in results {
             match result {
                 Ok(res) => {
@@ -228,7 +229,7 @@ pub async fn run(args: Run) -> Result<(), Box<dyn Error>> {
                 Err(err) => eprintln!("error executing action {}", err),
             }
         }
-        if !results.is_empty() {
+        if has_results {
             println!(
                 "{}",
                 format!(
